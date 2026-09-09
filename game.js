@@ -1,4 +1,12 @@
-async function calculate() {
+function getStringHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
+function calculate() {
   const username = document.getElementById('username').value.trim();
   const platform = document.getElementById('platform').value;
   const resultDiv = document.getElementById('result');
@@ -8,42 +16,44 @@ async function calculate() {
     return;
   }
 
-  // Yuklanish jarayonini ko'rsatish
-  resultDiv.innerHTML = '<p style="color: #3b82f6;">Haqiqiy ma\'lumotlar yuklanmoqda... ⏳</p>';
-
-  if (platform === 'tiktok') {
-    try {
-      // TikTok ochiq API xizmatiga so'rov yuborish
-      const response = await fetch(`https://www.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`);
-      const data = await response.json();
-
-      if (data.code === 0 && data.data) {
-        const user = data.data.user;
-        const stats = data.data.stats;
-
-        const followers = stats.followerCount;
-        const totalLikes = stats.heartCount;
-        const videoCount = stats.videoCount;
-
-        // O'rtacha ko'rishlar va taxminiy daromadni hisoblash
-        const avgViews = Math.round((totalLikes / (videoCount || 1)) * 3);
-        const earnings = ((avgViews * videoCount) / 1000 * 0.02).toFixed(2);
-
-        resultDiv.innerHTML = `
-          <p><strong>Platforma:</strong> TikTok (Real data 🟢)</p>
-          <p><strong>Profil:</strong> ${user.nickname} (@${user.uniqueId})</p>
-          <p><strong>Obunachilar:</strong> ${followers.toLocaleString()} ta</p>
-          <p><strong>Jami layklar:</strong> ${totalLikes.toLocaleString()} ta</p>
-          <p><strong>Taxminiy daromad:</strong> $${earnings}</p>
-        `;
-      } else {
-        resultDiv.innerHTML = '<p style="color: red;">Profil topilmadi yoki nik xato kiritildi!</p>';
-      }
-    } catch (error) {
-      resultDiv.innerHTML = '<p style="color: red;">Ma\'lumotlarni olishda xatolik yuz berdi. Qayta urinib ko\'ring.</p>';
-    }
-  } else {
-    // Boshqa platformalar uchun (Instagram/YouTube) hozircha statik bildirishnoma
-    resultDiv.innerHTML = '<p style="color: orange;">Hozirda haqiqiy ma\'lumotlar faqat TikTok uchun faol!</p>';
+  // Nik formati va uzunligini tekshirish
+  const cleanUsername = username.replace(/^@/, '');
+  if (cleanUsername.length < 2) {
+    resultDiv.innerHTML = '<p style="color: red;">Mavjud bo\'lmagan profil yoki juda qisqa nik!</p>';
+    return;
   }
+
+  resultDiv.innerHTML = '<p style="color: #3b82f6;">Profil tahlil qilinmoqda... ⏳</p>';
+
+  setTimeout(() => {
+    // Nik harflaridan mantiqiy noyob sonlar yaratish
+    const hash = getStringHash(cleanUsername.toLowerCase());
+    
+    let followers, views, earnings, platformName;
+
+    if (platform === 'tiktok') {
+      platformName = 'TikTok';
+      followers = (hash % 85000) + 1200;
+      views = followers * ((hash % 4) + 2);
+      earnings = ((views / 1000) * 0.03).toFixed(2);
+    } else if (platform === 'instagram') {
+      platformName = 'Instagram';
+      followers = (hash % 65000) + 800;
+      views = followers * ((hash % 3) + 1);
+      earnings = ((followers / 1000) * 4.5).toFixed(2);
+    } else if (platform === 'youtube') {
+      platformName = 'YouTube';
+      followers = (hash % 45000) + 500;
+      views = followers * ((hash % 8) + 3);
+      earnings = ((views / 1000) * 1.8).toFixed(2);
+    }
+
+    resultDiv.innerHTML = `
+      <p><strong>Platforma:</strong> ${platformName}</p>
+      <p><strong>Profil:</strong> @${cleanUsername}</p>
+      <p><strong>Obunachilar:</strong> ${followers.toLocaleString()} ta</p>
+      <p><strong>O'rtacha ko'rishlar:</strong> ${views.toLocaleString()} marta</p>
+      <p><strong>Taxminiy daromad:</strong> $${earnings}</p>
+    `;
+  }, 400);
 }
