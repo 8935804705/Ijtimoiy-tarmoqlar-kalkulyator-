@@ -7,26 +7,26 @@ function getStringHash(str) {
 }
 
 function calculate() {
-  const username = document.getElementById('username').value.trim();
+  const usernameInput = document.getElementById('username').value.trim();
   const platform = document.getElementById('platform').value;
   const resultDiv = document.getElementById('result');
 
-  if (!username) {
+  if (!usernameInput) {
     resultDiv.innerHTML = '<p style="color: red;">Iltimos, nikni kiriting!</p>';
     return;
   }
 
-  // Nik formati va uzunligini tekshirish
-  const cleanUsername = username.replace(/^@/, '');
+  // Bo'shliqlarni olib tashlash va toza nik hosil qilish
+  const cleanUsername = usernameInput.replace(/\s+/g, '').replace(/^@/, '');
+
   if (cleanUsername.length < 2) {
-    resultDiv.innerHTML = '<p style="color: red;">Mavjud bo\'lmagan profil yoki juda qisqa nik!</p>';
+    resultDiv.innerHTML = '<p style="color: red;">Juda qisqa nik kiritildi!</p>';
     return;
   }
 
   resultDiv.innerHTML = '<p style="color: #3b82f6;">Profil tahlil qilinmoqda... ⏳</p>';
 
   setTimeout(() => {
-    // Nik harflaridan mantiqiy noyob sonlar yaratish
     const hash = getStringHash(cleanUsername.toLowerCase());
     
     let followers, views, earnings, platformName;
@@ -55,5 +55,5 @@ function calculate() {
       <p><strong>O'rtacha ko'rishlar:</strong> ${views.toLocaleString()} marta</p>
       <p><strong>Taxminiy daromad:</strong> $${earnings}</p>
     `;
-  }, 400);
+  }, 300);
 }
